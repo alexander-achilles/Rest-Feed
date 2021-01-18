@@ -20,8 +20,14 @@ app.use((req, res, next) => {
 });
 
 app.use('/feed', feedRoutes);
+app.use((error,req,res,next)=>{
+    console.log(error);
+    const status= error.statusCode || 500;
+    const message= error.message;
+    res.status(status).json({message: message});
+})
 
-mongoose.connect('mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.pwkc0.mongodb.net/Feed?retryWrites=true&w=majority',{useUnifiedTopology: true,  useNewUrlParser: true  }).then(
+mongoose.connect(process.env.MONGO_URI,{useUnifiedTopology: true,  useNewUrlParser: true  }).then(
     app.listen(8080,()=>{
     console.log("server is up on 8080");
 })
