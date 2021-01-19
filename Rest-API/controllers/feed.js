@@ -5,15 +5,22 @@ const {validationResult}= require('express-validator/check');
 const Post= require("../models/post");
 
 exports.getPosts = (req, res, next) => {
-  Post.find()
+    const currentPage=req.query.page || 1;
+    const perPage= 2;
+    let totalItems;
+    Post.find().countDocuments()
+    .then(count=>{
+        totalItems=count;
+        return Post.find().skip((currentPage-1)* perPage).limit(perPage);
+    })
   .then(posts=>{
     res.status(200)
-    .json({message: 'Fetched posts succesfully', posts:posts});
+    .json({message: 'Fetched posts succesfully', posts:posts, totalItems:totalItems});
   })
   .catch(err=>{
     // console.log(err);
-    if(!error.statusCode){
-      error.statusCode=500; 
+    if(!err.statusCode){
+      err.statusCode=500; 
     }
     next(err);
   })
@@ -33,13 +40,12 @@ exports.createPost = (req, res, next) => {
   }
 
     // Create post in db
-    const imageUrl= req.file.path;
-    console.log(image);
+    const image= req.file.filename;
   const title = req.body.title;
   const content = req.body.content;
   const post= new Post({
     title: title,
-    imageUrl:imageUrl,
+    imageUrl:'images/'+image,
     content: content,
     creator: {name:'Mrin'}
   });
@@ -51,8 +57,8 @@ exports.createPost = (req, res, next) => {
     });
   }).catch(err=>{
     // console.log(err);
-    if(!error.statusCode){
-      error.statusCode=500; 
+    if(!err.statusCode){
+      err.statusCode=500; 
     }
     next(err);
   })
@@ -120,6 +126,31 @@ exports.updatePost=(req,res,next)=>{
         }
         next(err);
       });
+};
+
+exports.deletePost=(req,res,next)=>{
+    const postId= req.params.postId;
+    Post.findById(postId)
+    .then(post=>{
+        if(!post){
+            const error= new Error("could not found");
+            error.statusCode= 404;
+            throw error;
+          }
+          //check logged in user
+        clearImage(post.imageUrl);
+        return Post.findByIdAndRemove(postId);
+    })
+    .then(result=>{
+        console.log(result);
+        res.status(200).json({message: 'Deleted Product'});
+    })
+    .catch(err=>{
+        if(!err.statusCode){
+          err.statusCode=500;
+        }
+        next(err);
+    });
 }
 
 const clearImage=filePath=>{
