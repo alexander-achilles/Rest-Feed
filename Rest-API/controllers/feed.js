@@ -23,12 +23,20 @@ exports.createPost = (req, res, next) => {
     error.statusCode= 422;
     throw error;
   }
+  if(!req.file){
+    const error= new Error("file not uploaded");
+    error.statusCode=422;
+    throw error;
+  }
+
     // Create post in db
+    const image= req.file.filename
+    console.log(image);
   const title = req.body.title;
   const content = req.body.content;
   const post= new Post({
     title: title,
-    imageUrl:'images/hey.png',
+    imageUrl:"images/"+image,
     content: content,
     creator: {name:'Mrin'}
   });
