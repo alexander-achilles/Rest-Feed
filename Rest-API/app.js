@@ -18,7 +18,7 @@ const fileStorage = multer.diskStorage({
     cb(null, 'images');
   },
   filename: (req, file, cb) => {
-    cb(null, new Date().toISOString() + '-' + file.originalname);
+    cb(null, file.originalname);
   }
 });
 
@@ -68,7 +68,7 @@ mongoose
   )
   .then(result => {
     const server = app.listen(8080,()=>{console.log("server is up at 8080")});
-    const io = require('socket.io')(server);
+    const io = require('./socket').init(server);
     io.on('connection', socket => {
       console.log('Client connected');
     });
